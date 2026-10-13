@@ -1,0 +1,12 @@
+{
+  "name": "session-note",
+  "version": "0.2.8",
+  "description": "Tell your Claude Code sessions apart. /note pins a context comment to a session and /note-color gives it a color: the comment shows in a colored band above the prompt, and in the desktop Code tab the session's sidebar title gets a matching square emoji (🟥🟧🟨🟩🟦🟪) and the comment.",
+  "author": {
+    "name": "Avishalom Shalit",
+    "url": "https://github.com/avishalom"
+  },
+  "types": "./types/index.d.ts",
+  "homepage": "https://github.com/avishalom/session-note",
+  "repository": "https://github.com/avishalom/session-note"
+}
