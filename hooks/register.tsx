@@ -113,6 +113,16 @@ const stripDecor = (title: string): string => {
   return base
 }
 
+// Prompts that did not come from the person: they don't count as "last cmd".
+const AUTOMATED = new Set(['task-notification', 'scheduled-trigger', 'peer', 'plugin'])
+
+export const countsAsCommand = (kind: unknown): boolean => !AUTOMATED.has(String(kind ?? ''))
+
+// "/note - time", "/note -time" and "/note --time" all toggle the time line.
+export const isTimeToggle = (arg: string): boolean => /^-{1,2}\s*time$/i.test(arg.trim())
+
+const lastKey = async ($: EngineInterface) => `last:${await $.session.id()}`
+
 const storeKey = async ($: EngineInterface) => `note:${await $.session.id()}`
 
 const save = async ($: EngineInterface, next: Note) => {
@@ -169,14 +179,27 @@ export const register: Register = on => {
     })
     const saved = (await $.store.get(await storeKey($))) as Note | undefined
     if (saved) await update($, note, () => saved)
+    const last = (await $.store.get(await lastKey($))) as number | undefined
+    if (typeof last === 'number') await update($, lastCmd, () => last)
 
     return next(e)
   })
 
-  // Remembers when the user last submitted a prompt, for the time line.
+  // Remembers when the user last submitted a prompt, for the time line. The
+  // desktop app's prompts arrive as 'sdk', so count every origin but the
+  // automated ones.
   on('prompt.submit', async ($, e, next) => {
-    if (e.origin?.kind === 'composer' || e.origin?.kind === 'bridge') await update($, lastCmd, () => Date.now())
-    return next(e)
+    const ran = await next(e)
+    if (countsAsCommand(e.origin?.kind)) {
+      try {
+        const at = Date.now()
+        await update($, lastCmd, () => at)
+        await $.store.set(await lastKey($), at)
+      } catch {
+        // the time line is a convenience; never fail the prompt over it
+      }
+    }
+    return ran
   })
 
   on('command.run', { command: 'note' }, async ($, e) => {
@@ -185,7 +208,7 @@ export const register: Register = on => {
     if (!arg) {
       return { text: cur.text ? `Comment: ${cur.text}` : 'No comment set. Use /note <text> (or /note - time for a time line).' }
     }
-    if (arg === '- time') {
+    if (isTimeToggle(arg)) {
       const showTime = !cur.showTime
       await save($, { ...cur, showTime })
       return { text: showTime ? 'Time line on.' : 'Time line off.' }

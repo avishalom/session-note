@@ -20,7 +20,7 @@ Screenshot: a session in the sidebar with its red square and comment.
 - `/note <text>` — Set the comment
 - `/note` — Show the current comment
 - `/note clear` — Remove the comment and restore the sidebar title
-- `/note - time` — Toggle a time line in the band, such as `note 14:02 · last cmd 14:35`: when the comment was set and when you last submitted a prompt (the date is added when it is not today)
+- `/note -time` (or `/note - time`) — Toggle a time line in the band, such as `note 14:02 · last cmd 14:35`: when the comment was set and when you last submitted a prompt (the date is added when it is not today)
 - `/note-color <color>` — Color the band and add a matching square to the sidebar title: `red`, `green`, `blue`, `yellow`, `orange`, `purple`, `pink`, `teal`, `gray`, common CSS names like `wheat`, or a hex value like `#2b4a6f`
 - `/note-color clear` — Remove the color
 

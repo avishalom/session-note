@@ -1,7 +1,7 @@
 import { describe, expect, mock, test } from 'claude-code/testing'
 import type { On } from 'claude-code'
 
-import { squareFor, timeLine } from '../hooks/register'
+import { countsAsCommand, isTimeToggle, squareFor, timeLine } from '../hooks/register'
 
 const stubSessionServer = (on: On, titles: string[]) => {
   on('session.id', async () => ({ value: 'sess-1' }))
@@ -133,5 +133,14 @@ describe('session-note', () => {
     const { noteAt: _, ...old } = n
     expect(timeLine(old, null, now)).toBe('note unknown · last cmd none yet')
     expect(timeLine({ ...n, text: '' }, at(12, 14, 35), now)).toBe('last cmd 14:35')
+  })
+  test('every spelling of the time toggle works', () => {
+    for (const arg of ['- time', '-time', '--time', ' - TIME ']) expect(isTimeToggle(arg)).toBe(true)
+    for (const arg of ['time', 'time for lunch', '- times']) expect(isTimeToggle(arg)).toBe(false)
+  })
+
+  test('prompts from any surface count as the last command; automated ones do not', () => {
+    for (const kind of ['composer', 'bridge', 'sdk', 'unclassified']) expect(countsAsCommand(kind)).toBe(true)
+    for (const kind of ['task-notification', 'scheduled-trigger', 'peer', 'plugin']) expect(countsAsCommand(kind)).toBe(false)
   })
 })
