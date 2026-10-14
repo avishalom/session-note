@@ -73,10 +73,11 @@ const fmtTime = (ms: number, now: number): string => {
   return today ? clock : `${MONTHS[d.getMonth()]} ${d.getDate()} ${clock}`
 }
 
-// "note 14:02 · last cmd 14:35"; old state without a note time reads "note unknown".
+// "note 14:02 · last cmd 14:35". A comment set before the time line existed has
+// no recorded time, so its part is left out rather than shown as unknown.
 export const timeLine = (n: Note, lastCmdAt: number | null, now: number): string => {
   const parts: string[] = []
-  if (n.text) parts.push(`note ${n.noteAt ? fmtTime(n.noteAt, now) : 'unknown'}`)
+  if (n.text && n.noteAt) parts.push(`note ${fmtTime(n.noteAt, now)}`)
   parts.push(`last cmd ${lastCmdAt ? fmtTime(lastCmdAt, now) : 'none yet'}`)
   return parts.join(' · ')
 }

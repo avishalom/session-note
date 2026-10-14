@@ -131,7 +131,7 @@ describe('session-note', () => {
     expect(timeLine({ ...n, noteAt: at(11, 9, 5) }, at(12, 14, 35), now)).toBe('note Oct 11 09:05 · last cmd 14:35')
     // State saved before the timestamp existed.
     const { noteAt: _, ...old } = n
-    expect(timeLine(old, null, now)).toBe('note unknown · last cmd none yet')
+    expect(timeLine(old, null, now)).toBe('last cmd none yet')
     expect(timeLine({ ...n, text: '' }, at(12, 14, 35), now)).toBe('last cmd 14:35')
   })
   test('every spelling of the time toggle works', () => {
