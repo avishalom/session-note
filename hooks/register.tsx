@@ -122,6 +122,13 @@ export const countsAsCommand = (kind: unknown): boolean => !AUTOMATED.has(String
 // "/note - time", "/note -time" and "/note --time" all toggle the time line.
 export const isTimeToggle = (arg: string): boolean => /^-{1,2}\s*time$/i.test(arg.trim())
 
+// "/note -color teal" (also "- color", "--color", "-colour"): the color subcommand.
+// Returns the argument after it ('' when bare), or null when arg is not one.
+export const colorArg = (arg: string): string | null => {
+  const m = /^-{1,2}\s*colou?r(?:\s+(.*))?$/i.exec(arg.trim())
+  return m ? (m[1] ?? '').trim() : null
+}
+
 const lastKey = async ($: EngineInterface) => `last:${await $.session.id()}`
 
 const storeKey = async ($: EngineInterface) => `note:${await $.session.id()}`
@@ -164,18 +171,29 @@ const syncTitle = async ($: EngineInterface, n: Note): Promise<string> => {
   return isDecorated ? 'Sidebar title updated.' : 'Sidebar title restored.'
 }
 
+const setColor = async ($: EngineInterface, cur: Note, arg: string): Promise<{ text: string }> => {
+  if (!arg) {
+    return { text: cur.color ? `Color: ${cur.color}` : 'No color set. Use /note -color <name or #hex>.' }
+  }
+  const color = arg.toLowerCase() === 'clear' ? null : toColor(arg)
+  const n = { ...cur, color }
+  await save($, n)
+  const titled = await syncTitle($, n)
+  const square = squareFor(color)
+
+  return {
+    text: color
+      ? `Session color set to ${color}${square ? ` ${square}` : ''}. ${titled}`
+      : `Session color cleared. ${titled}`,
+  }
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'note',
-      description: 'Set this session\'s context comment (no text shows it, "clear" removes it, "- time" toggles a time line)',
-      argumentHint: '[text | clear | - time]',
-      immediate: true,
-    })
-    await $.command.register({
-      name: 'note-color',
-      description: 'Set this session\'s color: a name (red, blue, teal, wheat...) or hex, or "clear"',
-      argumentHint: '[color | clear]',
+      description: 'Set this session\'s context comment (no text shows it, "clear" removes it, "-time" toggles a time line, "-color <name|#hex|clear>" colors it)',
+      argumentHint: '[text | clear | -time | -color <color>]',
       immediate: true,
     })
     const saved = (await $.store.get(await storeKey($))) as Note | undefined
@@ -207,8 +225,10 @@ export const register: Register = on => {
     const arg = e.args.trim()
     const cur = (await read($, note)) ?? EMPTY
     if (!arg) {
-      return { text: cur.text ? `Comment: ${cur.text}` : 'No comment set. Use /note <text> (or /note - time for a time line).' }
+      return { text: cur.text ? `Comment: ${cur.text}` : 'No comment set. Use /note <text> (or /note -time for a time line, /note -color <color> for a color).' }
     }
+    const colorRaw = colorArg(arg)
+    if (colorRaw !== null) return setColor($, cur, colorRaw)
     if (isTimeToggle(arg)) {
       const showTime = !cur.showTime
       await save($, { ...cur, showTime })
@@ -220,25 +240,6 @@ export const register: Register = on => {
     const titled = await syncTitle($, n)
 
     return { text: `${text ? 'Comment set.' : 'Comment cleared.'} ${titled}` }
-  })
-
-  on('command.run', { command: 'note-color' }, async ($, e) => {
-    const arg = e.args.trim()
-    const cur = (await read($, note)) ?? EMPTY
-    if (!arg) {
-      return { text: cur.color ? `Color: ${cur.color}` : 'No color set. Use /note-color <name or #hex>.' }
-    }
-    const color = arg.toLowerCase() === 'clear' ? null : toColor(arg)
-    const n = { ...cur, color }
-    await save($, n)
-    const titled = await syncTitle($, n)
-    const square = squareFor(color)
-
-    return {
-      text: color
-        ? `Session color set to ${color}${square ? ` ${square}` : ''}. ${titled}`
-        : `Session color cleared. ${titled}`,
-    }
   })
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {

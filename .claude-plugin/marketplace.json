@@ -1,6 +1,6 @@
 {
   "name": "session-note",
-  "description": "Tell your Claude Code sessions apart. /note pins a context comment to a session and /note-color gives it a color: the comment shows in a colored band above the prompt, and in the desktop Code tab the session's sidebar title gets a matching square emoji (🟥🟧🟨🟩🟦🟪) and the comment.",
+  "description": "Tell your Claude Code sessions apart. /note pins a context comment to a session and /note -color gives it a color: the comment shows in a colored band above the prompt, and in the desktop Code tab the session's sidebar title gets a matching square emoji (🟥🟧🟨🟩🟦🟪) and the comment.",
   "owner": {
     "name": "Avishalom Shalit"
   },

@@ -21,8 +21,9 @@ Screenshot: a session in the sidebar with its red square and comment.
 - `/note` — Show the current comment
 - `/note clear` — Remove the comment and restore the sidebar title
 - `/note -time` (or `/note - time`) — Toggle a time line in the band, such as `note 14:02 · last cmd 14:35`: when the comment was set and when you last submitted a prompt (the date is added when it is not today)
-- `/note-color <color>` — Color the band and add a matching square to the sidebar title: `red`, `green`, `blue`, `yellow`, `orange`, `purple`, `pink`, `teal`, `gray`, common CSS names like `wheat`, or a hex value like `#2b4a6f`
-- `/note-color clear` — Remove the color
+- `/note -color <color>` — Color the band and add a matching square to the sidebar title: `red`, `green`, `blue`, `yellow`, `orange`, `purple`, `pink`, `teal`, `gray`, common CSS names like `wheat`, or a hex value like `#2b4a6f`
+- `/note -color clear` — Remove the color
+- `/note -color` — Show the current color
 
 Comments, colors and the time line setting are saved per session and come back when you reopen it.
 
@@ -36,7 +37,7 @@ claude plugin marketplace add avishalom/session-note
 claude plugin install session-note@session-note --scope user
 ```
 
-Restart Claude Code, then try `/note hello` and `/note-color teal`.
+Restart Claude Code, then try `/note hello` and `/note -color teal`.
 
 To update later:
 

@@ -1,7 +1,7 @@
 import { describe, expect, mock, test } from 'claude-code/testing'
 import type { On } from 'claude-code'
 
-import { countsAsCommand, isTimeToggle, squareFor, timeLine } from '../hooks/register'
+import { colorArg, countsAsCommand, isTimeToggle, squareFor, timeLine } from '../hooks/register'
 
 const stubSessionServer = (on: On, titles: string[]) => {
   on('session.id', async () => ({ value: 'sess-1' }))
@@ -28,7 +28,7 @@ describe('session-note', () => {
     expect(set.text).toContain('Comment set.')
     expect(titles).toEqual(['Fix login bug · 📝 waiting on QA sign-off'])
 
-    const colored = await run($, 'note-color', 'teal')
+    const colored = await run($, 'note', '-color teal')
     expect(colored.text).toContain('🟦')
     expect(titles.at(-1)).toBe('🟦 Fix login bug · 📝 waiting on QA sign-off')
 
@@ -45,14 +45,14 @@ describe('session-note', () => {
     await run($, 'note', 'clear')
     expect(titles.at(-1)).toBe('🟦 Fix login bug')
 
-    await run($, 'note-color', 'clear')
+    await run($, 'note', '-color clear')
     expect(titles.at(-1)).toBe('Fix login bug')
   })
 
   test('light named colors get black text', async ($, on) => {
     stubSessionServer(on, [])
     await run($, 'note', 'tan band')
-    await run($, 'note-color', 'wheat')
+    await run($, 'note', '- color wheat')
     const ui = await $.ui.mount({
       plugin: 'session-note', surface: 'desktop', component: 'AbovePrompt',
       props: { hasSurvey: false, isWorking: false, maxRows: 10, bodyColumns: 80,
@@ -70,7 +70,7 @@ describe('session-note', () => {
       teal: ['🟦', 'white'], gray: ['⬛', 'white'],
     }
     for (const [name, [square, text]] of Object.entries(expected)) {
-      const out = await run($, 'note-color', name)
+      const out = await run($, 'note', `--color ${name}`)
       expect(out.text).toContain(square)
       const ui = await $.ui.mount({
         plugin: 'session-note', surface: 'desktop', component: 'AbovePrompt',
@@ -137,6 +137,23 @@ describe('session-note', () => {
   test('every spelling of the time toggle works', () => {
     for (const arg of ['- time', '-time', '--time', ' - TIME ']) expect(isTimeToggle(arg)).toBe(true)
     for (const arg of ['time', 'time for lunch', '- times']) expect(isTimeToggle(arg)).toBe(false)
+  })
+
+  test('every spelling of the color subcommand works; plain text stays a comment', () => {
+    expect(colorArg('-color teal')).toBe('teal')
+    expect(colorArg('- color #2b4a6f')).toBe('#2b4a6f')
+    expect(colorArg('--COLOUR clear')).toBe('clear')
+    expect(colorArg('-color')).toBe('')
+    for (const arg of ['color me surprised', 'teal', '-colors red', '-time']) expect(colorArg(arg)).toBeNull()
+  })
+
+  test('/note -color with no value shows the color and does not touch the comment', async ($, on) => {
+    stubSessionServer(on, [])
+    await run($, 'note', 'keep me')
+    expect((await run($, 'note', '-color')).text).toBe('No color set. Use /note -color <name or #hex>.')
+    await run($, 'note', '-color red')
+    expect((await run($, 'note', '-color')).text).toBe('Color: #e5484d')
+    expect((await run($, 'note', '')).text).toBe('Comment: keep me')
   })
 
   test('prompts from any surface count as the last command; automated ones do not', () => {
